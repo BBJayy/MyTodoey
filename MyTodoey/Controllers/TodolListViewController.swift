@@ -15,7 +15,7 @@ class TodoListViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        if let items = UserDefaults.standard.array(forKey: "itemArray") as? [String] {
+        if let items = defaults.array(forKey: "itemArray") as? [String] {
             itemArray = items
         }
     }
