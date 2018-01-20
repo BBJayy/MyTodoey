@@ -8,7 +8,7 @@
 
 import Foundation
 
-class CellInfo {
+class CellInfo: Codable { //Encodable & Decodable
     var name : String = ""
     var isCheked : Bool = false
     

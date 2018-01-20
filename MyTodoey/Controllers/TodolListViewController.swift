@@ -10,14 +10,16 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray = ["Buy mom", "Cell fun", "Have cookies"]
+    var itemArray = [CellInfo]()
     var defaults = UserDefaults.standard
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        if let items = defaults.array(forKey: "itemArray") as? [String] {
-            itemArray = items
-        }
+        
+        
+        loadItems()
     }
 
     override func didReceiveMemoryWarning() {
@@ -32,32 +34,48 @@ class TodoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
         
-        cell.textLabel?.text = itemArray[indexPath.row]
+        let item = itemArray[indexPath.row]
+        cell.textLabel?.text = item.name
+        cell.accessoryType = item.isCheked ? .checkmark : .none
         
         return cell
 
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if tableView.cellForRow(at: indexPath)?.accessoryType != .checkmark {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-        } else {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .none
-        }
-        tableView.deselectRow(at: indexPath, animated: true)
+        itemArray[indexPath.row].isCheked = !itemArray[indexPath.row].isCheked
         
+        //tableView.cellForRow(at: indexPath)?.accessoryType = itemArray[indexPath.row].isCheked ? .checkmark : .none
+        saveItems()
+        
+        tableView.deselectRow(at: indexPath, animated: true)
     }
     
     
+    
+    fileprivate func saveItems() {
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(self.itemArray)
+            try data.write(to: self.dataFilePath!)
+            
+        } catch {
+            print("Error encoding or writing data to plist \(error)")
+        }
+        
+        self.tableView.reloadData()
+    }
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         var textField = UITextField()
         let allert = UIAlertController(title: "Add new Todoey utem", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             if textField.text != "" {
-                self.itemArray.append(textField.text!)
-                self.defaults.set(self.itemArray, forKey: "itemArray")
-                self.tableView.reloadData()
+                let cell = CellInfo()
+                cell.name = textField.text!
+                self.itemArray.append(cell)
+                
+                self.saveItems()
             }
         }
         allert.addTextField { (alertTextField) in
@@ -66,6 +84,18 @@ class TodoListViewController: UITableViewController {
         }
         allert.addAction(action)
         present(allert, animated: true, completion: nil)
+    }
+    
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([CellInfo].self, from: data)
+            }
+            catch {
+                print("Error loading data \(error)")
+            }
+        }
     }
     
 }
