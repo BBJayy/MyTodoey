@@ -67,7 +67,7 @@ class TodoListViewController: UITableViewController {
                 print("Error loading complition of the task \(error)")
             }
         }
-        tableView.reloadData
+        tableView.reloadData()
         
         tableView.deselectRow(at: indexPath, animated: true)
     }
